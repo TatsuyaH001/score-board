@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Score Board</title>
+
+<style>
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+/* レイアウト */
+.container {
+  display: flex;
+  height: calc(100vh - 120px);
+  background-image: url("bg.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.team {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+/* 背景 */
+.left {
+  background: transparent;
+}
+
+.right {
+  background: transparent;
+}
+
+/* チーム名エリア
+   高さを固定して、スコア位置がズレないようにする */
+.team-name {
+  color: white;
+  font-weight: 900;
+  text-align: center;
+
+  width: 78%;
+  height: 150px;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-family:
+    "Hiragino Sans",
+    "Noto Sans JP",
+    "Yu Gothic",
+    sans-serif;
+
+  text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+
+  line-height: 1.08;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+
+  padding: 0 10px;
+}
+
+/* スコア */
+.score-box {
+  background: white;
+  width: 280px;
+  height: 250px;
+  box-sizing: border-box;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 200px;
+  font-family: Impact, "Arial Black", sans-serif;
+  letter-spacing: 4px;
+  line-height: 1;
+}
+
+/* サーブ */
+.serve-row {
+  display: flex;
+  gap: 10px;
+  min-height: 56px;
+  align-items: center;
+}
+
+.dot {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 3px solid #ccc;
+  box-sizing: border-box;
+}
+
+.fill {
+  background: white;
+  border-color:  white;
+}
+
+/* 中央 */
+.center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 100px;
+  color: white;
+  font-family: Impact, "Arial Black", sans-serif;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.35);
+  pointer-events: none;
+}
+
+/* コート */
+.court {
+  position: absolute;
+  bottom: 650px;
+  width: 100%;
+  text-align: center;
+  font-size: 50px;
+  color: white;
+  font-family: Impact, "Arial Black", sans-serif;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.35);
+  pointer-events: none;
+}
+
+/* ロゴ */
+.logo-bar {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 100px;
+  background: white;
+  display: flex;
+  justify-content: center;
+  gap: 120px;
+  align-items: center;
+}
+
+.logo-small { height: 50px; }
+.logo-big { height: 80px; }
+
+/* 操作 */
+.controls {
+  position: absolute;
+  top: 500px;
+  left: 400px;
+  background: rgba(0,0,0,0.7);
+  padding: 10px;
+  color: white;
+  z-index: 10;
+  display: none;
+}
+
+button {
+  margin: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="controls">
+  <input id="teamA" placeholder="左チーム">
+  <input id="teamB" placeholder="右チーム"><br>
+
+  <button onclick="addScore('A')">左 +1</button>
+  <button onclick="minusScore('A')">左 −1</button><br>
+
+  <button onclick="addScore('B')">右 +1</button>
+  <button onclick="minusScore('B')">右 −1</button><br>
+
+  <button onclick="nextServe()">サーブ進行</button>
+</div>
+
+<div class="container">
+  <div class="team left">
+    <div class="team-name" id="nameA">TEAM A</div>
+    <div class="score-box" id="scoreA">00</div>
+    <div class="serve-row" id="serveA"></div>
+  </div>
+
+  <div class="team right">
+    <div class="team-name" id="nameB">TEAM B</div>
+    <div class="score-box" id="scoreB">00</div>
+    <div class="serve-row" id="serveB"></div>
+  </div>
+</div>
+
+<div class="center">VS</div>
+<div class="court">Court A</div>
+
+<div class="logo-bar">
+  <img src="logo1.png" class="logo-small">
+  <img src="logo2.png" class="logo-small">
+  <img src="logo3.png" class="logo-big">
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyAJGr2rIZFr3m7Olh54Ko3nLfmGMEPBxCM",
+  projectId: "pickleball-score-95fc1"
+});
+
+const db = getFirestore(app);
+
+let scoreA = 0;
+let scoreB = 0;
+let serverTeam = "A";
+let serverTurn = 1;
+
+function format(n) {
+  return n.toString().padStart(2, "0");
+}
+
+/* 左右独立で文字サイズ調整 */
+function fitTeamName(el, max = 60, min = 24) {
+  el.style.fontSize = max + "px";
+  el.style.whiteSpace = "nowrap";
+
+  /* まず1行で入るならそのまま */
+  if (el.scrollWidth <= el.clientWidth) {
+    return;
+  }
+
+  /* 入らないなら改行可にする */
+  el.style.whiteSpace = "normal";
+
+  let size = max;
+  while ((el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) && size > min) {
+    size -= 2;
+    el.style.fontSize = size + "px";
+  }
+}
+
+function render() {
+  document.getElementById("scoreA").innerText = format(scoreA);
+  document.getElementById("scoreB").innerText = format(scoreB);
+
+  const elA = document.getElementById("nameA");
+  const elB = document.getElementById("nameB");
+
+  elA.innerText = document.getElementById("teamA").value || "TEAM A";
+  elB.innerText = document.getElementById("teamB").value || "TEAM B";
+
+  /* 左右それぞれ独立で調整 */
+  fitTeamName(elA);
+  fitTeamName(elB);
+
+  document.getElementById("serveA").innerHTML =
+    `<div class="dot ${serverTeam === "A" && serverTurn === 1 ? "fill" : ""}"></div>
+     <div class="dot ${serverTeam === "A" && serverTurn === 2 ? "fill" : ""}"></div>`;
+
+  document.getElementById("serveB").innerHTML =
+    `<div class="dot ${serverTeam === "B" && serverTurn === 1 ? "fill" : ""}"></div>
+     <div class="dot ${serverTeam === "B" && serverTurn === 2 ? "fill" : ""}"></div>`;
+}
+
+function send() {
+  const teamA = document.getElementById("teamA").value || "TEAM A";
+  const teamB = document.getElementById("teamB").value || "TEAM B";
+
+  setDoc(doc(db, "courts", "courtA"), {
+    scoreA,
+    scoreB,
+    serverTeam,
+    serverTurn,
+    teamA,
+    teamB
+  });
+}
+
+window.addScore = (team) => {
+  if (team !== serverTeam) return;
+
+  if (team === "A") {
+    scoreA++;
+  } else {
+    scoreB++;
+  }
+  send();
+};
+
+window.minusScore = (team) => {
+  if (team === "A" && scoreA > 0) scoreA--;
+  if (team === "B" && scoreB > 0) scoreB--;
+  send();
+};
+
+window.nextServe = () => {
+  if (serverTurn === 1) {
+    serverTurn = 2;
+  } else {
+    serverTurn = 1;
+    serverTeam = serverTeam === "A" ? "B" : "A";
+  }
+  send();
+};
+
+onSnapshot(doc(db, "courts", "courtA"), (snap) => {
+  if (!snap.exists()) {
+    render();
+    send();
+    return;
+  }
+
+  const d = snap.data();
+
+  scoreA = d.scoreA || 0;
+  scoreB = d.scoreB || 0;
+  serverTeam = d.serverTeam || "A";
+  serverTurn = d.serverTurn || 1;
+
+  document.getElementById("teamA").value = d.teamA || "";
+  document.getElementById("teamB").value = d.teamB || "";
+
+  render();
+});
+
+document.getElementById("teamA").oninput = () => {
+  render();
+  send();
+};
+
+document.getElementById("teamB").oninput = () => {
+  render();
+  send();
+};
+</script>
+
+</body>
+</html>
