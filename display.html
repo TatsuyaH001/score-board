@@ -2,42 +2,25 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Score Board Display</title>
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Score Board</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 <style>
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: black;
-}
-
 body {
-  position: relative;
-}
-
-/* 1920x1080の固定ステージを自動拡大縮小 */
-#stage {
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 1920px;
-  height: 1080px;
-  transform-origin: top left;
+  margin: 0;
   overflow: hidden;
-  background: black;
 }
 
-/* 表示エリア */
+/* レイアウト */
 .container {
   display: flex;
-  width: 1920px;
-  height: 980px; /* 下のロゴ帯100pxを除いた高さ */
+  height: calc(100vh - 120px);
+  background-image: url("bg.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .team {
@@ -51,64 +34,56 @@ body {
 
 /* 背景 */
 .left {
-  background:
-    repeating-linear-gradient(
-      135deg,
-      rgba(255,255,255,0.08) 0px,
-      rgba(255,255,255,0.08) 2px,
-      transparent 2px,
-      transparent 12px
-    ),
-    linear-gradient(135deg, #ff3b3b, #a00000);
+  background: transparent;
 }
 
 .right {
-  background:
-    repeating-linear-gradient(
-      135deg,
-      rgba(255,255,255,0.08) 0px,
-      rgba(255,255,255,0.08) 2px,
-      transparent 2px,
-      transparent 12px
-    ),
-    linear-gradient(135deg, #2a6fff, #001f3f);
+  background: transparent;
 }
 
-/* チーム名 */
+/* チーム名エリア
+   高さを固定して、スコア位置がズレないようにする */
 .team-name {
   color: white;
   font-weight: 900;
   text-align: center;
+
   width: 78%;
   height: 150px;
   box-sizing: border-box;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   font-family:
     "Hiragino Sans",
     "Noto Sans JP",
     "Yu Gothic",
     sans-serif;
-  -webkit-text-stroke: 1px rgba(0,0,0,0.35);
+
   text-shadow: 0 2px 10px rgba(0,0,0,0.7);
+
   line-height: 1.08;
   white-space: normal;
   word-break: break-word;
   overflow-wrap: anywhere;
+
   padding: 0 10px;
 }
 
 /* スコア */
 .score-box {
   background: white;
-  width: 220px;
-  height: 180px;
+  width: 280px;
+  height: 250px;
   box-sizing: border-box;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 120px;
+
+  font-size: 200px;
   font-family: Impact, "Arial Black", sans-serif;
   letter-spacing: 4px;
   line-height: 1;
@@ -131,87 +106,111 @@ body {
 }
 
 .fill {
-  background: black;
-  border-color: black;
+  background: white;
+  border-color:  white;
 }
 
 /* 中央 */
 .center {
   position: absolute;
   left: 50%;
-  top: 45%;
+  top: 50%;
   transform: translate(-50%, -50%);
   font-size: 100px;
   color: white;
   font-family: Impact, "Arial Black", sans-serif;
   text-shadow: 0 2px 10px rgba(0,0,0,0.35);
   pointer-events: none;
-  z-index: 5;
 }
 
 /* コート */
 .court {
   position: absolute;
-  bottom: 120px;
+  bottom: 650px;
   width: 100%;
   text-align: center;
-  font-size: 80px;
+  font-size: 50px;
   color: white;
   font-family: Impact, "Arial Black", sans-serif;
   text-shadow: 0 2px 10px rgba(0,0,0,0.35);
   pointer-events: none;
-  z-index: 5;
 }
 
-/* ロゴ帯 */
+/* ロゴ */
 .logo-bar {
   position: absolute;
   bottom: 0;
-  width: 1920px;
+  width: 100%;
   height: 100px;
   background: white;
   display: flex;
   justify-content: center;
   gap: 120px;
   align-items: center;
-  z-index: 5;
 }
 
 .logo-small { height: 50px; }
 .logo-big { height: 80px; }
+
+/* 操作 */
+.controls {
+  position: absolute;
+  top: 500px;
+  left: 400px;
+  background: rgba(0,0,0,0.7);
+  padding: 10px;
+  color: white;
+  z-index: 10;
+  display: none;
+}
+
+button {
+  margin: 5px;
+}
 </style>
 </head>
 
 <body>
 
-<div id="stage">
-  <div class="container">
-    <div class="team left">
-      <div class="team-name" id="nameA">TEAM A</div>
-      <div class="score-box" id="scoreA">00</div>
-      <div class="serve-row" id="serveA"></div>
-    </div>
+<div class="controls">
+  <input id="teamA" placeholder="左チーム">
+  <input id="teamB" placeholder="右チーム"><br>
 
-    <div class="team right">
-      <div class="team-name" id="nameB">TEAM B</div>
-      <div class="score-box" id="scoreB">00</div>
-      <div class="serve-row" id="serveB"></div>
-    </div>
+  <button onclick="addScore('A')">左 +1</button>
+  <button onclick="minusScore('A')">左 −1</button><br>
+
+  <button onclick="addScore('B')">右 +1</button>
+  <button onclick="minusScore('B')">右 −1</button><br>
+
+  <button onclick="nextServe()">サーブ進行</button>
+</div>
+
+<div class="container">
+  <div class="team left">
+    <div class="team-name" id="nameA">TEAM A</div>
+    <div class="score-box" id="scoreA">00</div>
+    <div class="serve-row" id="serveA"></div>
   </div>
 
-  <div class="center">VS</div>
-  <div class="court" id="courtLabel">Court A</div>
-
-  <div class="logo-bar">
-    <img src="logo1.png" class="logo-small">
-    <img src="logo2.png" class="logo-small">
-    <img src="logo3.png" class="logo-big">
+  <div class="team right">
+    <div class="team-name" id="nameB">TEAM B</div>
+    <div class="score-box" id="scoreB">00</div>
+    <div class="serve-row" id="serveB"></div>
   </div>
+</div>
+
+<div class="center">VS</div>
+<div class="court">Court A</div>
+
+<div class="logo-bar">
+  <img src="logo1.png" class="logo-small">
+  <img src="logo2.png" class="logo-small">
+  <img src="logo3.png" class="logo-big">
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
-import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyAJGr2rIZFr3m7Olh54Ko3nLfmGMEPBxCM",
@@ -220,35 +219,13 @@ const app = initializeApp({
 
 const db = getFirestore(app);
 
-/* ▼ ここをコートごとに変える
-   courtA / courtB / courtC / courtD */
-const currentCourt = "courtA";
-
 let scoreA = 0;
 let scoreB = 0;
 let serverTeam = "A";
 let serverTurn = 1;
-let teamA = "TEAM A";
-let teamB = "TEAM B";
 
 function format(n) {
   return n.toString().padStart(2, "0");
-}
-
-function courtToLabel(courtId) {
-  return courtId.replace("court", "Court ");
-}
-
-function fitStage() {
-  const baseW = 1920;
-  const baseH = 1080;
-  const scale = Math.min(window.innerWidth / baseW, window.innerHeight / baseH);
-
-  const stage = document.getElementById("stage");
-  const offsetX = (window.innerWidth - baseW * scale) / 2;
-  const offsetY = (window.innerHeight - baseH * scale) / 2;
-
-  stage.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
 }
 
 /* 左右独立で文字サイズ調整 */
@@ -256,10 +233,12 @@ function fitTeamName(el, max = 60, min = 24) {
   el.style.fontSize = max + "px";
   el.style.whiteSpace = "nowrap";
 
+  /* まず1行で入るならそのまま */
   if (el.scrollWidth <= el.clientWidth) {
     return;
   }
 
+  /* 入らないなら改行可にする */
   el.style.whiteSpace = "normal";
 
   let size = max;
@@ -276,9 +255,10 @@ function render() {
   const elA = document.getElementById("nameA");
   const elB = document.getElementById("nameB");
 
-  elA.innerText = teamA || "TEAM A";
-  elB.innerText = teamB || "TEAM B";
+  elA.innerText = document.getElementById("teamA").value || "TEAM A";
+  elB.innerText = document.getElementById("teamB").value || "TEAM B";
 
+  /* 左右それぞれ独立で調整 */
   fitTeamName(elA);
   fitTeamName(elB);
 
@@ -289,13 +269,53 @@ function render() {
   document.getElementById("serveB").innerHTML =
     `<div class="dot ${serverTeam === "B" && serverTurn === 1 ? "fill" : ""}"></div>
      <div class="dot ${serverTeam === "B" && serverTurn === 2 ? "fill" : ""}"></div>`;
-
-  document.getElementById("courtLabel").innerText = courtToLabel(currentCourt);
 }
 
-onSnapshot(doc(db, "courts", currentCourt), (snap) => {
+function send() {
+  const teamA = document.getElementById("teamA").value || "TEAM A";
+  const teamB = document.getElementById("teamB").value || "TEAM B";
+
+  setDoc(doc(db, "courts", "courtA"), {
+    scoreA,
+    scoreB,
+    serverTeam,
+    serverTurn,
+    teamA,
+    teamB
+  });
+}
+
+window.addScore = (team) => {
+  if (team !== serverTeam) return;
+
+  if (team === "A") {
+    scoreA++;
+  } else {
+    scoreB++;
+  }
+  send();
+};
+
+window.minusScore = (team) => {
+  if (team === "A" && scoreA > 0) scoreA--;
+  if (team === "B" && scoreB > 0) scoreB--;
+  send();
+};
+
+window.nextServe = () => {
+  if (serverTurn === 1) {
+    serverTurn = 2;
+  } else {
+    serverTurn = 1;
+    serverTeam = serverTeam === "A" ? "B" : "A";
+  }
+  send();
+};
+
+onSnapshot(doc(db, "courts", "courtA"), (snap) => {
   if (!snap.exists()) {
     render();
+    send();
     return;
   }
 
@@ -305,17 +325,22 @@ onSnapshot(doc(db, "courts", currentCourt), (snap) => {
   scoreB = d.scoreB || 0;
   serverTeam = d.serverTeam || "A";
   serverTurn = d.serverTurn || 1;
-  teamA = d.teamA || "TEAM A";
-  teamB = d.teamB || "TEAM B";
+
+  document.getElementById("teamA").value = d.teamA || "";
+  document.getElementById("teamB").value = d.teamB || "";
 
   render();
 });
 
-window.addEventListener("resize", fitStage);
-window.addEventListener("load", fitStage);
+document.getElementById("teamA").oninput = () => {
+  render();
+  send();
+};
 
-fitStage();
-render();
+document.getElementById("teamB").oninput = () => {
+  render();
+  send();
+};
 </script>
 
 </body>
