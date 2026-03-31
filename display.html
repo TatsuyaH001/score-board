@@ -8,15 +8,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 
 <style>
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
+  background: black;
+}
+
+body {
+  position: relative;
+}
+
+/* 1920x1080 の固定ステージ */
+#stage {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: top left;
+  overflow: hidden;
+  background: black;
 }
 
 /* レイアウト */
 .container {
   display: flex;
-  height: calc(100vh - 120px);
+  width: 1920px;
+  height: 980px; /* 下ロゴ帯100pxを除いた高さ */
   background-image: url("bg.png");
   background-size: cover;
   background-position: center;
@@ -29,7 +50,7 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 20px;
+  gap: 10px;
 }
 
 /* 背景 */
@@ -41,49 +62,40 @@ body {
   background: transparent;
 }
 
-/* チーム名エリア
-   高さを固定して、スコア位置がズレないようにする */
+/* チーム名 */
 .team-name {
   color: white;
   font-weight: 900;
   text-align: center;
-
-  width: 78%;
+  width: 85%;
   height: 150px;
   box-sizing: border-box;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   font-family:
     "Hiragino Sans",
     "Noto Sans JP",
     "Yu Gothic",
     sans-serif;
-
   text-shadow: 0 2px 10px rgba(0,0,0,0.7);
-
   line-height: 1.08;
   white-space: normal;
   word-break: break-word;
   overflow-wrap: anywhere;
-
   padding: 0 10px;
 }
 
 /* スコア */
 .score-box {
   background: white;
-  width: 280px;
-  height: 250px;
+  width: 500px;
+  height: 500px;
   box-sizing: border-box;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
-  font-size: 200px;
+  font-size: 400px;
   font-family: Impact, "Arial Black", sans-serif;
   letter-spacing: 4px;
   line-height: 1;
@@ -92,14 +104,14 @@ body {
 /* サーブ */
 .serve-row {
   display: flex;
-  gap: 10px;
+  gap: 50px;
   min-height: 56px;
   align-items: center;
 }
 
 .dot {
-  width: 50px;
-  height: 50px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   border: 3px solid #ccc;
   box-sizing: border-box;
@@ -107,7 +119,7 @@ body {
 
 .fill {
   background: white;
-  border-color:  white;
+  border-color: white;
 }
 
 /* 中央 */
@@ -116,41 +128,44 @@ body {
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  font-size: 100px;
+  font-size: 150px;
   color: white;
   font-family: Impact, "Arial Black", sans-serif;
   text-shadow: 0 2px 10px rgba(0,0,0,0.35);
   pointer-events: none;
+  z-index: 5;
 }
 
 /* コート */
 .court {
   position: absolute;
-  bottom: 650px;
+  bottom: 900px;
   width: 100%;
   text-align: center;
-  font-size: 50px;
+  font-size: 100px;
   color: white;
   font-family: Impact, "Arial Black", sans-serif;
   text-shadow: 0 2px 10px rgba(0,0,0,0.35);
   pointer-events: none;
+  z-index: 5;
 }
 
 /* ロゴ */
 .logo-bar {
   position: absolute;
   bottom: 0;
-  width: 100%;
-  height: 100px;
+  width: 1920px;
+  height: 150px;
   background: white;
   display: flex;
   justify-content: center;
-  gap: 120px;
+  gap: 150px;
   align-items: center;
+  z-index: 5;
 }
 
-.logo-small { height: 50px; }
-.logo-big { height: 80px; }
+.logo-small { height: 100px; }
+.logo-big { height: 120px; }
 
 /* 操作 */
 .controls {
@@ -172,40 +187,42 @@ button {
 
 <body>
 
-<div class="controls">
-  <input id="teamA" placeholder="左チーム">
-  <input id="teamB" placeholder="右チーム"><br>
+<div id="stage">
+  <div class="controls">
+    <input id="teamA" placeholder="左チーム">
+    <input id="teamB" placeholder="右チーム"><br>
 
-  <button onclick="addScore('A')">左 +1</button>
-  <button onclick="minusScore('A')">左 −1</button><br>
+    <button onclick="addScore('A')">左 +1</button>
+    <button onclick="minusScore('A')">左 −1</button><br>
 
-  <button onclick="addScore('B')">右 +1</button>
-  <button onclick="minusScore('B')">右 −1</button><br>
+    <button onclick="addScore('B')">右 +1</button>
+    <button onclick="minusScore('B')">右 −1</button><br>
 
-  <button onclick="nextServe()">サーブ進行</button>
-</div>
-
-<div class="container">
-  <div class="team left">
-    <div class="team-name" id="nameA">TEAM A</div>
-    <div class="score-box" id="scoreA">00</div>
-    <div class="serve-row" id="serveA"></div>
+    <button onclick="nextServe()">サーブ進行</button>
   </div>
 
-  <div class="team right">
-    <div class="team-name" id="nameB">TEAM B</div>
-    <div class="score-box" id="scoreB">00</div>
-    <div class="serve-row" id="serveB"></div>
+  <div class="container">
+    <div class="team left">
+      <div class="team-name" id="nameA">TEAM A</div>
+      <div class="score-box" id="scoreA">00</div>
+      <div class="serve-row" id="serveA"></div>
+    </div>
+
+    <div class="team right">
+      <div class="team-name" id="nameB">TEAM B</div>
+      <div class="score-box" id="scoreB">00</div>
+      <div class="serve-row" id="serveB"></div>
+    </div>
   </div>
-</div>
 
-<div class="center">VS</div>
-<div class="court">Court A</div>
+  <div class="center">VS</div>
+  <div class="court">Court A</div>
 
-<div class="logo-bar">
-  <img src="logo1.png" class="logo-small">
-  <img src="logo2.png" class="logo-small">
-  <img src="logo3.png" class="logo-big">
+  <div class="logo-bar">
+    <img src="logo1.png" class="logo-small">
+    <img src="logo2.png" class="logo-small">
+    <img src="logo3.png" class="logo-big">
+  </div>
 </div>
 
 <script type="module">
@@ -228,17 +245,32 @@ function format(n) {
   return n.toString().padStart(2, "0");
 }
 
+/* 1920x1080 ステージを画面にフィット */
+function fitStage() {
+  const baseW = 1920;
+  const baseH = 1080;
+
+  const scale = Math.min(
+    window.innerWidth / baseW,
+    window.innerHeight / baseH
+  );
+
+  const stage = document.getElementById("stage");
+  const offsetX = (window.innerWidth - baseW * scale) / 2;
+  const offsetY = (window.innerHeight - baseH * scale) / 2;
+
+  stage.style.transform = `translate(${offsetX}px, ${offsetY}px) scale(${scale})`;
+}
+
 /* 左右独立で文字サイズ調整 */
 function fitTeamName(el, max = 60, min = 24) {
   el.style.fontSize = max + "px";
   el.style.whiteSpace = "nowrap";
 
-  /* まず1行で入るならそのまま */
   if (el.scrollWidth <= el.clientWidth) {
     return;
   }
 
-  /* 入らないなら改行可にする */
   el.style.whiteSpace = "normal";
 
   let size = max;
@@ -258,7 +290,6 @@ function render() {
   elA.innerText = document.getElementById("teamA").value || "TEAM A";
   elB.innerText = document.getElementById("teamB").value || "TEAM B";
 
-  /* 左右それぞれ独立で調整 */
   fitTeamName(elA);
   fitTeamName(elB);
 
@@ -341,6 +372,12 @@ document.getElementById("teamB").oninput = () => {
   render();
   send();
 };
+
+window.addEventListener("resize", fitStage);
+window.addEventListener("load", fitStage);
+
+fitStage();
+render();
 </script>
 
 </body>
